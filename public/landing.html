@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>PRS and Microbiome</title>
+  <title>Microbiome meets ST</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
@@ -10,56 +10,7 @@
 
 <body> 
 	<div class="container-fluid">
-	  <title>APS & DIA collab</title>
-	
-	  <h2>Links </h2>
-	  <p>
-	  Data (raw fastq.gz files) & outputs (from Kraken2Bracken, MetaPhlAn3, MetaPhlAn4, HUMAnN3, Kneaddata, etc) on <a href="https://wb2.arkau.roche.com/projects/arkau-j7d0g-pw577s5knh3h45b">arvados</a>
-	  </p>
-	  <p>
-	  <b>Google Slides</b> on shared drive Microbiome Steering Group > Projects > DIA: <br>
-	  -Literature review on PacBio & full-length 16S rRNA gene sequencing<br>
-	  -Literature review on Nanopore sequencing (in the microbiome field)<br>
-	  -APS-DIA project summary<br>
-	  </p>
-	  <h2>APS: Shotgun metagenomics </h2>
-	  <p>
-	  Investigating Pseudomonas spp. in gut microbiomes of APS patients vs healthy individuals.
-	  </p>
-	  <p>
-	  <b>Objective:</b> Test the hypothesis that the gut microbiome of APS patients supports increased colonization of Pseudomonas spp., as opposed to healthy controls & Potential biomarker discovery.
-	  </p>
-	  <p>
-	  <b>Background:</b><br>
-	  Antiphospholipid syndrome (APS) is an autoimmune disorder that causes an increased risk of thrombosis. Ruff et al. (2019) demonstrated cross-reactivity between non-orthologous mimotopes expressed by a common human gut commensal, Roseburia intestinalis (R. int), and T and B cell autoepitopes in the APS autoantigen β2-glycoprotein I (β2GPI), hencnt and persistence of autoimmunity in APS. What is more, APS patients seem to harbor significantly higher loads of Pseudomonas spp. compared to healthy controls in their gut microbiomes (unpublished data by Martin Kriegel). These findings were made based on analysis of 16S V4 rRNA gene (amplicon) sequencing data from fecal samples from 35 APS and 37 healthy samples.<br>
-	  Pseudomonas spp. is normally not found in the gut microbiome of healthy individuals (or if so, it is considered as a sequencing contaminant), thus it was hypothesized that the gut microbiome of APS patients supports increased colonization of opportunistic pathogens, such as Pseudomonas spp. This would be interesting for the exploration of potential antipseudomonal antibiotics, as pathogenic pseudomonas aeruginosa is a multidrug resistant pathogen causing many nosocomial infections.<br>
-	  Short-read shotgun metagenomics sequencing was performed on the fecal samples to replicate the findings from the amplicon sequencing data and to explore microbial communities (and their functional units) that are depleted in APS patients.
-	  </p>
-	  <p>
-	  <b>Bioinformatics Pipeline: assembly-free approach</b><br>
-	  1. QC & Preprocessing: Kneaddata (FASTQC, Trimmomatic, Bowtie2)<br>
-	  2. Taxonomic Classification: Kraken2 (GTDBv202 database) & Bracken<br>
-	  3. Taxonomic Classification: MetaPhlAn4beta<br>
-	  4. Functional Profiling: HUMAnN3 (based on MetaPhlAn3 outputs)<br>
-	  </p>
-	  <p>
-	  <b>Bioinformatics Pipeline: co-assembly approach</b><br>
-	  1. QC & Preprocessing: Kneaddata (FASTQC, Trimmomatic, Bowtie2)<br>
-	  2. Co-assembly: MEGAHIT<br>
-	  3. Taxonomic Classification: Kraken2 (GTDBv202 database)<br>
-	  </p>
-	  <h2>APS: Full-length 16S rRNA gene sequencing </h2>
-	  	  <p>
-	  Investigating Pseudomonas spp. in gut microbiomes of APS patients vs healthy individuals in selected samples sequenced with PacBio Sequel II (hifi CCS reads).
-	  </p>
-	  <p>
-	  <b>Bioinformatics Pipeline: </b><br>
-	  DADA2 workflow for full-length 16S rRNA PacBio CCS reads, adapted from <a href="https://doi.org/10.1093/nar/gkz569">Callahan et al.</a>
-	  </p>
-	  <h2>ZymoBIOMICS Mock</h1>
-	    <p>
-	      ZymoBIOMICS mock communities were sequenced alongside the APS and healthy samples across multiple sequencing runs.
-	    </p>
+	  <title>Microbiome meets ST</title>
 	</div>
  </body> 
 </html>
