@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>APS and DIA collab</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script>
+	$(document).ready( function() {
+		$("nav li.target a").on("click", function () {
+			$("#content").attr('src', $(this).attr('id'));
+		});
+	});
+  </script>
+  
+  <script>
+	$(document).ready( function() {
+		$("nav li.target a").on("click", function () {
+			$(".nav").find(".active").removeClass("active");
+      $(this).parent().addClass("active");
+      $(this).parent().parent().parent().addClass("active");
+		});
+	});
+  </script>
+  <style>
+      body, html {width: 100%; height: 100%; margin: 0; padding: 0}
+      iframe {display: block; width: 100%; height: 100%; border: none;}
+      li.missing a {color: lightgrey;}
+  </style>
+</head>
+
+<body> 
+	<nav class="navbar navbar-inverse navbar-static-top">
+		<div class="container-fluid">
+		  <div class="navbar-header">
+			<a class="navbar-brand" href="./index.html">APS and DIA collab</a>
+		  </div>
+		  
+		  <ul class="nav navbar-nav">
+			<li class="active"><a href="./index.html">Home</a></li>
+			<li class="dropdown">
+			  <a class="dropdown-toggle" data-toggle="dropdown" href="#">Manuscript
+			  <span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="target"><a id="./pages/Manuscript_Metaphlan4beta.html" href="#">Taxonomic Classification: MetaPhlAn4</a></li>
+				<li class="target"><a id="./pages/Manuscript_Humann3.html" href="#">Functional Classification: HUMAnN3</a></li>
+				<li class="target"><a id="./pages/Manuscript_comparison.html" href="#">Comparison of sequencing technologies</a></li>
+			  </ul>
+			</li>
+			<li class="dropdown">
+			  <a class="dropdown-toggle" data-toggle="dropdown" href="#">APS: Shotgun metagenomics
+			  <span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="target"><a id="./pages/Kraken2Bracken.html" href="#">Taxonomic Classification: Kraken2 Bracken</a></li>
+				<li class="target"><a id="./pages/Metaphlan4.html" href="#">Taxonomic Classification: Metaphlan4</a></li>
+				<li class="target"><a id="./pages/Humann3.html"href="#">Functional Classification: Humann3</a></li>
+			  </ul>
+			</li>
+			<li class="dropdown">
+			  <a class="dropdown-toggle" data-toggle="dropdown" href="#">ZymoBIOMICS Mock
+			  <span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="target missing"><a id="./pages/zymomock.html" href="#">Shotgun metagenomics</a></li>
+			  </ul>
+			<li class="dropdown">
+			  <a class="dropdown-toggle" data-toggle="dropdown" href="#">APS: PacBio full-length 16S
+			  <span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="target missing"><a id="./pages/PacBio.html" href="#">DADA2 workflow</a></li>
+			  </ul>
+		  </ul>
+		  
+		  <ul class="nav navbar-nav navbar-right">
+      <li><a class="bi bi-github" target="_blank" href="https://code.roche.com/microbiome/aps-and-dia-collab">GitLab <i class="fa fa-gitlab"></i>
+</a></li>
+      </ul>
+    
+		</div>
+	  </nav>
+
+	<div class="container-fluid" style="position: absolute; top: 75px; left: 0; right: 0; bottom: 0;">
+	<iframe id="content" src="landing.html"></iframe>
+	</div>
+
+ </body> 
+</html>
