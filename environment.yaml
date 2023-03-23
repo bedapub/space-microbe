@@ -1,0 +1,11 @@
+name: st_microbiome_1.0
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - snakemake==6.6.1
+      - pysradb==1.4.2

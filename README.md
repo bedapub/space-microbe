@@ -10,11 +10,39 @@ You can look around to get an idea how to structure your project and, when done,
 
 # Snakemake Version of the Microbiome Pipeline
 
-How to run
+
+## Prerequisites
+
+### Activate conda environment
+
+To activate the conda environment for st_microbiome, please run the following code in the sHPC shell:
+
+```
+
+ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
+
+```
+
+### Create new conda environment
+
+It may be the case that you need to create a new conda environment. To do this please run the following code:
+
+```
+
+ml purge && ml Anaconda3
+conda env create -p </path/to/your/preferred/destination/folder/st_microbiome> -f environment.yml 
+conda activate </path/to/your/preferred/destination/folder/st_microbiome> 
+
+```
+
+
+### How to run
 
 ```bash
 
-ml snakemake
-
+ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
 
 ```
+
+
+
