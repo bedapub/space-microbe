@@ -33,6 +33,10 @@ ml purge && ml Anaconda3
 conda env create -p </path/to/your/preferred/destination/folder/st_microbiome> -f environment.yml 
 conda activate </path/to/your/preferred/destination/folder/st_microbiome> 
 
+
+# without environment.yml
+
+conda create -y -p /projects/site/pred/ngs/envs/st_microbiome -c conda-forge -c bioconda snakemake
 ```
 
 
