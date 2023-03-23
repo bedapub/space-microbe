@@ -36,7 +36,10 @@ conda activate </path/to/your/preferred/destination/folder/st_microbiome>
 
 # without environment.yml
 
-conda create -y -p /projects/site/pred/ngs/envs/st_microbiome -c conda-forge -c bioconda snakemake
+conda create -y -f -p /projects/site/pred/ngs/envs/st_microbiome python=3.9 mamba
+conda activate /projects/site/pred/ngs/envs/st_microbiome
+mamba install snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
+
 ```
 
 
@@ -50,3 +53,11 @@ ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_micro
 
 
 
+### Development
+
+```bash
+
+snakemake --cores 4 output/{CRC_16,OSCC_2}_possorted_genome_bam_unm_srt.bam
+snakemake --cores 4 output/{OSCC_2,CRC_16}_possorted_genome_bam_bamtofastq.done
+
+```

@@ -1,1 +1,4 @@
+.snakemake
 .ipynb_checkpoints
+output
+st_microbiome
