@@ -17,6 +17,8 @@ configfile: 'config.yaml'
 # Define variables
 OD = config['results']
 INDIR = config['input_directory']
+SAMPLES = ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']
+
 
 # ----------------------------------------------------------
 """
@@ -24,14 +26,12 @@ main rule
 """
 rule all:
     input:
-        fq = os.path.join(OD, '{sample}_trim.fq.gz'),
-        html = os.path.join(OD, '{sample}_fastp.html'),
-        json = os.path.join(OD, '{sample}_fastp.json'),
-        txt = os.path.join(OD, '{sample}_kraken-output.txt'),
-        report = os.path.join(OD, '{sample}_kraken-report.txt')
+        expand(os.path.join(OD, '{sample}_profiling-output.txt'), sample=SAMPLES),
+        os.path.join(OD, 'multiqc_QC', 'multiqc_report.html'),
+        os.path.join(OD, 'multiqc_kraken', 'multiqc_report.html')
 
- 
-# ----------------------------------------------------------
+
+ # ----------------------------------------------------------
 """
 extracting unmapped reads from possorted_genome_bam.bam file
 the rule processes all .bam files in input directory INDIR
@@ -89,7 +89,8 @@ rule bamtofastq:
         mem_mb=10000
     shell:
         """
-        mkdir -p {params.dir}
+        rm -rf {params.dir}/fastq && \
+        mkdir -p {params.dir} && \
         bamtofastq \
             --nthreads={threads} \
             {input} \
@@ -169,7 +170,7 @@ rule umi:
 
 # ----------------------------------------------------------
 """
-Quality controol on R2 fastq files
+Quality control on R2 fastq files
 
 cutadapt
  -g trims adapters from 5'end (TSO adapter sequence) and polyA
@@ -241,34 +242,24 @@ rule fastp:
 """
 Kraken2 profiling
 
+How much memory is required ?
+
 Define DB path 
 K2DB=/projects/site/pred/microbiome/database/kraken2_Standard_PlusPF/
 
 Step 1: Classify reads with kraken2 (with KrakenUniq option)
-
-singularity exec --home /projects /projects/site/pred/microbiome/microbiome-toolbox/apps/containers/kraken2/latest \
-  kraken2 --db $K2DB \
-  --memory-mapping \
-  --confidence 0.1 \
-  --threads 24 \
-  --use-names \
-  --gzip-compressed \
-  --report-minimizer-data \
-  --output $OUTDIR/${NAME}/kraken/${NAME}_output.txt \
-  --report $OUTDIR/${NAME}/kraken/${NAME}_report.txt \
-  $OUTDIR/${NAME}/${NAME}_trim.fq.gz
 """
-rule kraken_classify:
+rule classify:
     input:
         os.path.join(OD, '{sample}_trim.fq.gz')
     output:
-        txt = os.path.join(OD, '{sample}_kraken-output.txt'),
-        report = os.path.join(OD, '{sample}_kraken-report.txt')
+        txt = protected(os.path.join(OD, '{sample}_kraken-output.txt')),
+        report = protected(os.path.join(OD, '{sample}_kraken-report.txt'))
     params:
         db = config['kraken_db']
     threads: 24
     resources:
-        mem_mb=10000
+        mem_mb=100000
     shell:
         """
           kraken2 --db {params.db} \
@@ -288,16 +279,71 @@ rule kraken_classify:
 """
 Kraken2 profiling
 
-Define DB path 
-K2DB=/projects/site/pred/microbiome/database/kraken2_Standard_PlusPF/
-
 Step 2: modifying kraken output as input for R package
 """
-### extract only classified reads & remve all human reads
-#sed -e '/^U/d' -e '/sapiens/d' $OUTDIR/${NAME}/kraken/${NAME}_output.txt > $OUTDIR/${NAME}/${NAME}_filtered_output.txt
-### extract spatial BC & UMIs into separate tabs
-#sed -i 's/\_/\t/g' $OUTDIR/${NAME}/${NAME}_filtered_output.txt
-### extract taxid into separate tab
-#sed -i -e 's/ (taxid /\t/g' -e 's/)//g' $OUTDIR/${NAME}/${NAME}_filtered_output.txt
-### extract only CB, UMI, taxid columns
-#awk -F "\t" '{ print $3,"\t",$4,"\t",$6 }' $OUTDIR/${NAME}/${NAME}_filtered_output.txt > $OUTDIR/${NAME}/${NAME}_kraken_output.txt
+rule profiling:
+    input:
+        os.path.join(OD, '{sample}_kraken-output.txt')
+    output:
+         f = os.path.join(OD, '{sample}_filtered-output.txt'),
+         p = os.path.join(OD, '{sample}_profiling-output.txt')
+    shell:
+        """
+        ### extract only classified reads & remove all human reads
+        sed -e '/^U/d' -e '/sapiens/d' {input} > {output.f}
+        ### extract spatial BC & UMIs into separate tabs
+        sed -i 's/\_/\t/g' {output.f}
+        ### extract taxid into separate tab
+        sed -i -e 's/ (taxid /\t/g' -e 's/)//g' {output.f}
+        ### extract only CB, UMI, taxid columns
+        awk -F \"\t\" '{{ print $3,\"\t\",$4,\"\t\",$6 }}' {output.f} > {output.p}
+        """
+
+
+# ----------------------------------------------------------
+"""
+MultiQC for cutadapt and fastp
+"""
+rule multiqc:
+    input:
+        expand(os.path.join(OD, '{sample}_fastp.html'), sample=SAMPLES)
+    output:
+        os.path.join(OD, 'multiqc_QC', 'multiqc_report.html')
+    params:
+        indir = OD,
+        outdir = os.path.join(OD, 'multiqc_QC')
+    threads: 1
+    resources:
+        mem_mb=10000
+    shell:
+        """
+        multiqc \
+            --module cutadapt \
+            --module fastp \
+            --outdir {params.outdir} \
+            {params.indir}
+        """
+
+
+# ----------------------------------------------------------
+"""
+MultiQC for kraken
+"""
+rule multiqc_kraken:
+    input:
+        expand(os.path.join(OD, '{sample}_kraken-report.txt'), sample=SAMPLES)
+    output:
+        os.path.join(OD, 'multiqc_kraken', 'multiqc_report.html')
+    params:
+        indir = OD,
+        outdir = os.path.join(OD, 'multiqc_kraken')
+    threads: 1
+    resources:
+        mem_mb=10000
+    shell:
+        """
+        multiqc \
+            --module kraken \
+            --outdir {params.outdir} \
+            {params.indir}
+        """

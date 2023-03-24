@@ -1,3 +1,3 @@
 results: 'output'
 input_directory: 'st_microbiome'
-kraken_db: '/projects/site/pred/microbiome/database/kraken2_Standard_PlusPF'
+kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF'

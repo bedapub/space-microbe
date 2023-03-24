@@ -42,6 +42,20 @@ mamba install snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp
 
 ```
 
+### Kraken Database
+
+Building the Kraken standard database requires a lot of memory and disk space.
+See manual https://ccb.jhu.edu/software/kraken/MANUAL.html#standard-kraken-database
+
+
+The pipeline is using the "Standard plus protozoa & fungi" database (PlusPF, 53Gb archive size) provided by Ben Langmead et al. 
+See https://benlangmead.github.io/aws-indexes/k2
+
+```bash
+
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20230314.tar.gz
+
+```
 
 ### How to run
 
@@ -49,6 +63,10 @@ mamba install snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp
 
 ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
 
+
+snakemake
+
+conda deactivate
 ```
 
 
@@ -57,7 +75,13 @@ ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_micro
 
 ```bash
 
+ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
+
+
 snakemake --cores 4 output/{CRC_16,OSCC_2}_possorted_genome_bam_unm_srt.bam
 snakemake --cores 4 output/{OSCC_2,CRC_16}_possorted_genome_bam_bamtofastq.done
+
+conda deactivate
+
 
 ```
