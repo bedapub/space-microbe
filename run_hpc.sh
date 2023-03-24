@@ -42,7 +42,6 @@ snakemake --snakefile $SNAKE_FILE \
     --configfile $CONFIG_FILE \
     --jobs $JOBS \
     --profile $LSF_PROFILE \
-    --notemp \
     --latency-wait 6 \
     --rerun-incomplete \
     --keep-going \

@@ -46,7 +46,6 @@ snakemake --snakefile $SNAKE_FILE --rulegraph all --configfile $CONFIG_FILE | do
 snakemake --snakefile $SNAKE_FILE \
     --configfile $CONFIG_FILE \
     --cores $N_CORES \
-    --notemp \
     --latency-wait 6 \
     --rerun-incomplete \
     --keep-going \

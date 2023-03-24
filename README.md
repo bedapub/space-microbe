@@ -18,9 +18,7 @@ You can look around to get an idea how to structure your project and, when done,
 To activate the conda environment for st_microbiome, please run the following code in the sHPC shell:
 
 ```
-
 ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
-
 ```
 
 ### Create new conda environment
@@ -61,6 +59,13 @@ mkdir -p k2_pluspf_20230314 && cd k2_pluspf_20230314
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20230314.tar.gz
 tar xvfz k2_pluspf_20230314.tar.gz
 ```
+
+### Input Data (BAM files)
+
+All input data, ie `BAM` files, must be located in a local directory.
+The path and name to the local directory is input to the Snakemake workflow, via the configuration file (see below).
+Note that the workflow will process all files with extension `.bam` in the given input directory.
+
 
 ### Workflow Configuration File
 

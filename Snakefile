@@ -54,7 +54,7 @@ rule samtools_view:
     input:
         os.path.join(INDIR, '{sample}.bam'),
     output:
-        os.path.join(OD, '{sample}', '{sample}_unm.bam')
+        temp(os.path.join(OD, '{sample}', '{sample}_unm.bam'))
     threads: 4
     resources:
         mem_mb=10000
@@ -75,7 +75,7 @@ rule samtools_sort:
     input:
         os.path.join(OD, '{sample}', '{sample}_unm.bam')
     output:
-        os.path.join(OD, '{sample}', '{sample}_unm_srt.bam')
+        temp(os.path.join(OD, '{sample}', '{sample}_unm_srt.bam'))
     threads: 4
     resources:
         mem_mb=10000
@@ -90,12 +90,16 @@ rule samtools_sort:
 # ----------------------------------------------------------
 """
 converting bam file to R1 and R2 fastq files (in original format)
+
+Mark directory as TEMP ?
+
 """
 rule bamtofastq:
     input:
         os.path.join(OD, '{sample}', '{sample}_unm_srt.bam')
     output:
-        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')
+        temp(os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')),
+        temp(directory(os.path.join(OD, '{sample}', 'fastq')))
     params:
         dir = os.path.join(OD, '{sample}')
     threads: 4
@@ -109,7 +113,7 @@ rule bamtofastq:
             --nthreads={threads} \
             {input} \
             {params.dir}/fastq \
-        && touch {output}
+        && touch {output[0]}
         """
 
 # ----------------------------------------------------------
@@ -118,9 +122,10 @@ concatenating multiple fastq files into one R1
 """
 rule concatenate1:
     input:
-        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')
+        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done'),
+        os.path.join(OD, '{sample}', 'fastq')
     output:
-        os.path.join(OD, '{sample}', '{sample}_R1.fastq.gz')
+        temp(os.path.join(OD, '{sample}', '{sample}_R1.fastq.gz'))
     params:
         dir = os.path.join(OD, '{sample}', 'fastq')
     threads: 1
@@ -139,9 +144,10 @@ concatenating multiple fastq files into one R2
 """
 rule concatenate2:
     input:
-        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')
+        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done'),
+        os.path.join(OD, '{sample}', 'fastq')
     output:
-        os.path.join(OD, '{sample}', '{sample}_R2.fastq.gz')
+        temp(os.path.join(OD, '{sample}', '{sample}_R2.fastq.gz'))
     params:
         dir = os.path.join(OD, '{sample}', 'fastq')
     threads: 1
@@ -164,8 +170,8 @@ rule umi:
         fq1 = os.path.join(OD, '{sample}', '{sample}_R1.fastq.gz'),
         fq2 = os.path.join(OD, '{sample}', '{sample}_R2.fastq.gz')
     output:
-        fq1 = os.path.join(OD, '{sample}', '{sample}_R1_extracted.fastq.gz'),
-        fq2 = os.path.join(OD, '{sample}', '{sample}_R2_extracted.fastq.gz')
+        fq1 = temp(os.path.join(OD, '{sample}', '{sample}_R1_extracted.fastq.gz')),
+        fq2 = temp(os.path.join(OD, '{sample}', '{sample}_R2_extracted.fastq.gz'))
     params:
         bc = 'CCCCCCCCCCCCCCCCNNNNNNNNNNNN'
     threads: 1
@@ -195,8 +201,8 @@ rule cutadapt:
     input:
         os.path.join(OD, '{sample}', '{sample}_R2_extracted.fastq.gz')
     output:
-        fq = os.path.join(OD, '{sample}', '{sample}_trimTSO.fq.gz'),
-        report = os.path.join(OD, '{sample}', '{sample}_cutadapt.txt')
+        fq = temp(os.path.join(OD, '{sample}', '{sample}_trimTSO.fq.gz')),
+        report = temp(os.path.join(OD, '{sample}', '{sample}_cutadapt.txt'))
     params:
         adaptor = 'AAGCAGTGGTATCAACGCAGAGTACATGGG',
         polyA = '^A\{30\}'
@@ -231,9 +237,9 @@ rule fastp:
     input:
         os.path.join(OD, '{sample}', '{sample}_trimTSO.fq.gz')
     output:
-        fq = os.path.join(OD, '{sample}', '{sample}_trim.fq.gz'),
         html = os.path.join(OD, '{sample}', '{sample}_fastp.html'),
-        json = os.path.join(OD, '{sample}', '{sample}_fastp.json')
+        fq = temp(os.path.join(OD, '{sample}', '{sample}_trim.fq.gz')),
+        json = temp(os.path.join(OD, '{sample}', '{sample}_fastp.json'))
     params:
     threads: 6
     resources:
