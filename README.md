@@ -13,7 +13,7 @@ You can look around to get an idea how to structure your project and, when done,
 
 ## Prerequisites
 
-### Activate conda environment
+### Activate conda environment (only for pRED)
 
 To activate the conda environment for st_microbiome, please run the following code in the sHPC shell:
 
@@ -25,21 +25,27 @@ ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_micro
 
 ### Create new conda environment
 
-It may be the case that you need to create a new conda environment. To do this please run the following code:
+It may be that you need to create a new conda environment from scratch. To do this please run the following code:
 
-```
+```bash
+DIR=/path/to/your/preferred/destination/folder/st_microbiome
+NAME=st_microbiome
 
+# load module (only pRED)
 ml purge && ml Anaconda3
-conda env create -p </path/to/your/preferred/destination/folder/st_microbiome> -f environment.yml 
-conda activate </path/to/your/preferred/destination/folder/st_microbiome> 
 
+# without environment.yml file
+conda create -y -f -p $DIR/$NAME python=3.9 mamba
+conda activate $DIR/$NAME
+mamba install -y snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
+conda install -y conda-minify -c jamespreed
 
-# without environment.yml
+# then create the environment.yml file
+conda-minify --name $DIR/$NAME -f environment.yml 
 
-conda create -y -f -p /projects/site/pred/ngs/envs/st_microbiome python=3.9 mamba
-conda activate /projects/site/pred/ngs/envs/st_microbiome
-mamba install snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
-
+# with environment.yml file
+conda env create -p $DIR/$NAME -f environment.yml 
+conda activate $DIR/$NAME
 ```
 
 ### Kraken Database
@@ -52,21 +58,40 @@ The pipeline is using the "Standard plus protozoa & fungi" database (PlusPF, 53G
 See https://benlangmead.github.io/aws-indexes/k2
 
 ```bash
-
+mkdir -p k2_pluspf_20230314 && cd k2_pluspf_20230314
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20230314.tar.gz
-
+tar xvfz k2_pluspf_20230314.tar.gz
 ```
 
-### How to run
+### Workflow Configuration File
+
+In order to run the Snakemake workflow, one has to specify several parameters by a configuration file, e.g. `config.yaml`.
+
+The structure and format of the yaml file is as follows
+```
+results: 'output'                                                                    # Path to output directory, may not exist
+bam_dir: 'st_microbiome'                                                             # Path to input directory containing BAM files (must exist)
+samples: ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']              # List of BAM file names without file extension that are present in the input directory
+kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
+kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database
+```
+
+## How to run (pRED only)
+
+There are two ways to run the workflow:
+1. locally in the terminal
+2. submit to a cluster
+
+To run it locally, use the following command where the first input argument is the path to the workflow configuration file, `config.yaml` (see above) and the second, optional argument is to specify the maximal number of cores to use.
 
 ```bash
+./run_locally.sh <config.yaml> [cores]
+```
 
-ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
+If the workflow should be executed on a cluster, then use the following command.
 
-
-snakemake
-
-conda deactivate
+```bash
+./run_hpc.sh <config.yaml>
 ```
 
 
@@ -74,14 +99,30 @@ conda deactivate
 ### Development
 
 ```bash
+LSF_PROFILE=/apps/rocs/etc/apps/snakemake/lsf/v1.4_memfix
+SNAKE_FILE=Snakefile
+CONFIG_FILE=config.yaml
+JOBS=100
 
 ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
 
+snakemake --snakefile $SNAKE_FILE --rulegraph all --configfile $CONFIG_FILE | dot -Tpdf > rulegraph.pdf
 
-snakemake --cores 4 output/{CRC_16,OSCC_2}_possorted_genome_bam_unm_srt.bam
-snakemake --cores 4 output/{OSCC_2,CRC_16}_possorted_genome_bam_bamtofastq.done
+# Submit to cluster
+snakemake --snakefile $SNAKE_FILE \
+    --configfile $CONFIG_FILE \
+    --jobs $JOBS \
+    --profile $LSF_PROFILE \
+    --notemp \
+    --latency-wait 6 \
+    --rerun-incomplete \
+    --keep-going \
+    --verbose
+    
+    
+# Run it locally
+snakemake --cores 4 
 
 conda deactivate
-
 
 ```

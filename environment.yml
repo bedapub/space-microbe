@@ -1,10 +1,16 @@
-name: st_microbiome_1.0
+name: st_microbiome
 channels:
-  - conda-forge
-  - bioconda
-  - defaults
+- jamespreed
+- bioconda
+- conda-forge
 dependencies:
-  - python=3.9
-  - pip
-  - pip:
-      - snakemake
+- samtools=1.16.1
+- mamba=1.0.0
+- cutadapt=4.3
+- umi_tools=1.1.4
+- 10x_bamtofastq=1.4.1
+- conda-minify=0.1.2
+- fastp=0.23.2
+- multiqc=1.14
+- snakemake=7.24.0
+- kraken2=2.1.2

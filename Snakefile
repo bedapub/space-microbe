@@ -16,8 +16,15 @@ configfile: 'config.yaml'
 # ----------------------------------------------------------
 # Define variables
 OD = config['results']
-INDIR = config['input_directory']
-SAMPLES = ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']
+INDIR = config['bam_dir']
+SAMPLES = config['samples'] # ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']
+
+
+
+# ----------------------------------------------------------
+# Declare local rules, ie not submitted to the cluster
+localrules: all, profiling
+
 
 
 # ----------------------------------------------------------
@@ -26,7 +33,7 @@ main rule
 """
 rule all:
     input:
-        expand(os.path.join(OD, '{sample}_profiling-output.txt'), sample=SAMPLES),
+        expand(os.path.join(OD, '{sample}', '{sample}_profiling-output.txt'), sample=SAMPLES),
         os.path.join(OD, 'multiqc_QC', 'multiqc_report.html'),
         os.path.join(OD, 'multiqc_kraken', 'multiqc_report.html')
 
@@ -40,7 +47,7 @@ rule samtools_view:
     input:
         os.path.join(INDIR, '{sample}.bam'),
     output:
-        os.path.join(OD, '{sample}_unm.bam')
+        os.path.join(OD, '{sample}', '{sample}_unm.bam')
     threads: 4
     resources:
         mem_mb=10000
@@ -59,9 +66,9 @@ sort extracted reads
 """
 rule samtools_sort:
     input:
-        os.path.join(OD, '{sample}_unm.bam')
+        os.path.join(OD, '{sample}', '{sample}_unm.bam')
     output:
-        os.path.join(OD, '{sample}_unm_srt.bam')
+        os.path.join(OD, '{sample}', '{sample}_unm_srt.bam')
     threads: 4
     resources:
         mem_mb=10000
@@ -79,9 +86,9 @@ converting bam file to R1 and R2 fastq files (in original format)
 """
 rule bamtofastq:
     input:
-        os.path.join(OD, '{sample}_unm_srt.bam')
+        os.path.join(OD, '{sample}', '{sample}_unm_srt.bam')
     output:
-        os.path.join(OD, '{sample}_bamtofastq.done')
+        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')
     params:
         dir = os.path.join(OD, '{sample}')
     threads: 4
@@ -104,9 +111,9 @@ concatenating multiple fastq files into one R1
 """
 rule concatenate1:
     input:
-        os.path.join(OD, '{sample}_bamtofastq.done')
+        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')
     output:
-        os.path.join(OD, '{sample}_R1.fastq.gz')
+        os.path.join(OD, '{sample}', '{sample}_R1.fastq.gz')
     params:
         dir = os.path.join(OD, '{sample}', 'fastq')
     threads: 1
@@ -125,9 +132,9 @@ concatenating multiple fastq files into one R2
 """
 rule concatenate2:
     input:
-        os.path.join(OD, '{sample}_bamtofastq.done')
+        os.path.join(OD, '{sample}', '{sample}_bamtofastq.done')
     output:
-        os.path.join(OD, '{sample}_R2.fastq.gz')
+        os.path.join(OD, '{sample}', '{sample}_R2.fastq.gz')
     params:
         dir = os.path.join(OD, '{sample}', 'fastq')
     threads: 1
@@ -147,11 +154,11 @@ extracting BC & UMI from R1 and placing on R2 read header with umi_tools
 """
 rule umi:
     input:
-        fq1 = os.path.join(OD, '{sample}_R1.fastq.gz'),
-        fq2 = os.path.join(OD, '{sample}_R2.fastq.gz')
+        fq1 = os.path.join(OD, '{sample}', '{sample}_R1.fastq.gz'),
+        fq2 = os.path.join(OD, '{sample}', '{sample}_R2.fastq.gz')
     output:
-        fq1 = os.path.join(OD, '{sample}_R1_extracted.fastq.gz'),
-        fq2 = os.path.join(OD, '{sample}_R2_extracted.fastq.gz')
+        fq1 = os.path.join(OD, '{sample}', '{sample}_R1_extracted.fastq.gz'),
+        fq2 = os.path.join(OD, '{sample}', '{sample}_R2_extracted.fastq.gz')
     params:
         bc = 'CCCCCCCCCCCCCCCCNNNNNNNNNNNN'
     threads: 1
@@ -179,9 +186,10 @@ cutadapt
 """
 rule cutadapt:
     input:
-        os.path.join(OD, '{sample}_R2_extracted.fastq.gz')
+        os.path.join(OD, '{sample}', '{sample}_R2_extracted.fastq.gz')
     output:
-        os.path.join(OD, '{sample}_trimTSO.fq.gz')
+        fq = os.path.join(OD, '{sample}', '{sample}_trimTSO.fq.gz'),
+        report = os.path.join(OD, '{sample}', '{sample}_cutadapt.txt')
     params:
         adaptor = 'AAGCAGTGGTATCAACGCAGAGTACATGGG',
         polyA = '^A\{30\}'
@@ -196,8 +204,8 @@ rule cutadapt:
             --times 2 \
             --minimum-length 31 \
             --cores {threads} \
-            --output {output} \
-            {input}
+            --output {output.fq} \
+            {input} > {output.report}
         """
 
 
@@ -214,11 +222,11 @@ WARNING: you specified the options for cutting by quality, but forogt to enable 
 """
 rule fastp:
     input:
-        os.path.join(OD, '{sample}_trimTSO.fq.gz')
+        os.path.join(OD, '{sample}', '{sample}_trimTSO.fq.gz')
     output:
-        fq = os.path.join(OD, '{sample}_trim.fq.gz'),
-        html = os.path.join(OD, '{sample}_fastp.html'),
-        json = os.path.join(OD, '{sample}_fastp.json')
+        fq = os.path.join(OD, '{sample}', '{sample}_trim.fq.gz'),
+        html = os.path.join(OD, '{sample}', '{sample}_fastp.html'),
+        json = os.path.join(OD, '{sample}', '{sample}_fastp.json')
     params:
     threads: 6
     resources:
@@ -251,27 +259,27 @@ Step 1: Classify reads with kraken2 (with KrakenUniq option)
 """
 rule classify:
     input:
-        os.path.join(OD, '{sample}_trim.fq.gz')
+        os.path.join(OD, '{sample}', '{sample}_trim.fq.gz')
     output:
-        txt = protected(os.path.join(OD, '{sample}_kraken-output.txt')),
-        report = protected(os.path.join(OD, '{sample}_kraken-report.txt'))
+        txt = protected(os.path.join(OD, '{sample}', '{sample}_kraken-output.txt')),
+        report = protected(os.path.join(OD, '{sample}', '{sample}_kraken-report.txt'))
     params:
         db = config['kraken_db']
-    threads: 24
+    threads: config['kraken_threads']
     resources:
         mem_mb=100000
     shell:
         """
-          kraken2 --db {params.db} \
-              --memory-mapping \
-              --confidence 0.1 \
-              --threads {threads} \
-              --use-names \
-              --gzip-compressed \
-              --report-minimizer-data \
-              --output {output.txt} \
-              --report {output.report} \
-              {input}
+        kraken2 --db {params.db} \
+            --memory-mapping \
+            --confidence 0.1 \
+            --threads {threads} \
+            --use-names \
+            --gzip-compressed \
+            --report-minimizer-data \
+            --output {output.txt} \
+            --report {output.report} \
+            {input}
         """
 
 
@@ -283,10 +291,10 @@ Step 2: modifying kraken output as input for R package
 """
 rule profiling:
     input:
-        os.path.join(OD, '{sample}_kraken-output.txt')
+        os.path.join(OD, '{sample}', '{sample}_kraken-output.txt')
     output:
-         f = os.path.join(OD, '{sample}_filtered-output.txt'),
-         p = os.path.join(OD, '{sample}_profiling-output.txt')
+        f = os.path.join(OD, '{sample}', '{sample}_filtered-output.txt'),
+        p = os.path.join(OD, '{sample}', '{sample}_profiling-output.txt')
     shell:
         """
         ### extract only classified reads & remove all human reads
@@ -306,7 +314,8 @@ MultiQC for cutadapt and fastp
 """
 rule multiqc:
     input:
-        expand(os.path.join(OD, '{sample}_fastp.html'), sample=SAMPLES)
+        expand(os.path.join(OD, '{sample}', '{sample}_fastp.html'), sample=SAMPLES),
+        expand(os.path.join(OD, '{sample}', '{sample}_cutadapt.txt'), sample=SAMPLES)
     output:
         os.path.join(OD, 'multiqc_QC', 'multiqc_report.html')
     params:
@@ -318,6 +327,7 @@ rule multiqc:
     shell:
         """
         multiqc \
+            --force \
             --module cutadapt \
             --module fastp \
             --outdir {params.outdir} \
@@ -331,7 +341,7 @@ MultiQC for kraken
 """
 rule multiqc_kraken:
     input:
-        expand(os.path.join(OD, '{sample}_kraken-report.txt'), sample=SAMPLES)
+        expand(os.path.join(OD, '{sample}', '{sample}_kraken-report.txt'), sample=SAMPLES)
     output:
         os.path.join(OD, 'multiqc_kraken', 'multiqc_report.html')
     params:
@@ -343,6 +353,7 @@ rule multiqc_kraken:
     shell:
         """
         multiqc \
+            --force \
             --module kraken \
             --outdir {params.outdir} \
             {params.indir}

@@ -2,5 +2,7 @@
 .ipynb_checkpoints
 output
 st_microbiome
-k2_pluspf_20230314.tar.gz
+k2_pluspf_20230314
 wget-log
+logs
+rulegraph.pdf
