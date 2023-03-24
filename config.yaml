@@ -1,5 +1,4 @@
 results: 'output'                                                                    # Path to output directory, may not exist
 bam_dir: 'st_microbiome'                                                             # Path to input directory containing BAM files (must exist)
-samples: ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']              # List of BAM file names without file extension that are present in the input directory
 kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
 kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database

@@ -6,6 +6,7 @@ import sys
 import pandas as pd
 import subprocess # to get git hash
 from os.path import dirname, join
+from os import listdir
 
 
 # ----------------------------------------------------------
@@ -17,14 +18,20 @@ configfile: 'config.yaml'
 # Define variables
 OD = config['results']
 INDIR = config['bam_dir']
-SAMPLES = config['samples'] # ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']
 
+
+# ----------------------------------------------------------
+# Find all BAM files and create SAMPLES array
+SAMPLES = []
+for file in os.listdir(INDIR):
+    if file.endswith('.bam'):
+        SAMPLES.append(os.path.splitext(file)[0])
+#print(SAMPLES)
 
 
 # ----------------------------------------------------------
 # Declare local rules, ie not submitted to the cluster
 localrules: all, profiling
-
 
 
 # ----------------------------------------------------------

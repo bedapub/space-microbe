@@ -1,6 +1,6 @@
 #!/bin/bash
 
-N_CORES_DEFAULT=4
+N_CORES_DEFAULT=8
 
 function usage()
 {

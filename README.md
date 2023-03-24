@@ -25,7 +25,7 @@ ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_micro
 
 ### Create new conda environment
 
-It may be that you need to create a new conda environment from scratch. To do this please run the following code:
+It may be that you need to create a new conda environment from scratch. To do this please run one of the following code (`mamba` may be the fastest):
 
 ```bash
 DIR=/path/to/your/preferred/destination/folder/st_microbiome
@@ -34,16 +34,15 @@ NAME=st_microbiome
 # load module (only pRED)
 ml purge && ml Anaconda3
 
-# without environment.yml file
-conda create -y -f -p $DIR/$NAME python=3.9 mamba
+# create conda env with mamba and without environment.yml file
+conda create -y -f -p $DIR/$NAME -c conda-forge python=3.9 mamba
 conda activate $DIR/$NAME
-mamba install -y snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
-conda install -y conda-minify -c jamespreed
+mamba install -c bioconda -c conda-forge -c jamespreed -y conda-minify snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
 
 # then create the environment.yml file
 conda-minify --name $DIR/$NAME -f environment.yml 
 
-# with environment.yml file
+# create conda env with environment.yml file
 conda env create -p $DIR/$NAME -f environment.yml 
 conda activate $DIR/$NAME
 ```
@@ -67,14 +66,15 @@ tar xvfz k2_pluspf_20230314.tar.gz
 
 In order to run the Snakemake workflow, one has to specify several parameters by a configuration file, e.g. `config.yaml`.
 
-The structure and format of the yaml file is as follows
+The structure and format of the yaml file is as follows.
 ```
 results: 'output'                                                                    # Path to output directory, may not exist
 bam_dir: 'st_microbiome'                                                             # Path to input directory containing BAM files (must exist)
-samples: ['OSCC_2_possorted_genome_bam', 'CRC_16_possorted_genome_bam']              # List of BAM file names without file extension that are present in the input directory
 kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
 kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database
 ```
+
+The workflow will process all BAM files that are in the input directory `bam_dir` (must have extenstion `.bam`).
 
 ## How to run (pRED only)
 
