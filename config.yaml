@@ -1,4 +1,4 @@
+file_list: 'data/filelist_toy_data_schmucr1.txt'                                     # Path to file list (tabular wiht Sample-ID and BAM-filepath)
 results: 'output'                                                                    # Path to output directory, may not exist
-bam_dir: 'st_microbiome'                                                             # Path to input directory containing BAM files (must exist)
 kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
 kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database

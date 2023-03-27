@@ -17,15 +17,37 @@ configfile: 'config.yaml'
 # ----------------------------------------------------------
 # Define variables
 OD = config['results']
-INDIR = config['bam_dir']
 
 
 # ----------------------------------------------------------
 # Find all BAM files and create SAMPLES array
+#INDIR = config['bam_dir']
+#SAMPLES = []
+#for file in os.listdir(INDIR):
+#    if file.endswith('.bam'):
+#        SAMPLES.append(os.path.splitext(file)[0])
+
+# ----------------------------------------------------------
+# From input FileList create SAMPLES array and temp BAM directory
+# and create symbolic links to all BAM files
+file_list = config['file_list']
 SAMPLES = []
-for file in os.listdir(INDIR):
-    if file.endswith('.bam'):
-        SAMPLES.append(os.path.splitext(file)[0])
+INDIR = os.path.join(OD, 'bam')
+BAMDIR = INDIR
+if not os.path.exists(BAMDIR):
+    os.makedirs(BAMDIR)
+
+with open(config['file_list']) as f:
+    for line in f:
+       (sample, src) = line.split()
+       SAMPLES.append(sample)
+       #a[sample] = src
+       dest = os.path.join(BAMDIR, sample+'.bam')
+       if os.path.exists (src):
+           if not os.path.islink(dest):
+               os.symlink(src, dest)
+       else:
+            raise SystemExit('File does not exist:'+src)
 #print(SAMPLES)
 
 
@@ -40,12 +62,12 @@ main rule
 """
 rule all:
     input:
-        expand(os.path.join(OD, '{sample}', '{sample}_profiling-output.txt'), sample=SAMPLES),
         os.path.join(OD, 'multiqc_QC', 'multiqc_report.html'),
-        os.path.join(OD, 'multiqc_kraken', 'multiqc_report.html')
+        expand(os.path.join(OD, '{sample}', '{sample}_profiling-output.txt'), sample=SAMPLES)
 
+        
 
- # ----------------------------------------------------------
+# ----------------------------------------------------------
 """
 extracting unmapped reads from possorted_genome_bam.bam file
 the rule processes all .bam files in input directory INDIR
@@ -238,7 +260,7 @@ rule fastp:
         os.path.join(OD, '{sample}', '{sample}_trimTSO.fq.gz')
     output:
         html = os.path.join(OD, '{sample}', '{sample}_fastp.html'),
-        fq = temp(os.path.join(OD, '{sample}', '{sample}_trim.fq.gz')),
+        fq = os.path.join(OD, '{sample}', '{sample}_trim.fq.gz'),
         json = temp(os.path.join(OD, '{sample}', '{sample}_fastp.json'))
     params:
     threads: 6
@@ -306,7 +328,7 @@ rule profiling:
     input:
         os.path.join(OD, '{sample}', '{sample}_kraken-output.txt')
     output:
-        f = os.path.join(OD, '{sample}', '{sample}_filtered-output.txt'),
+        f = temp(os.path.join(OD, '{sample}', '{sample}_filtered-output.txt')),
         p = os.path.join(OD, '{sample}', '{sample}_profiling-output.txt')
     shell:
         """
@@ -324,11 +346,14 @@ rule profiling:
 # ----------------------------------------------------------
 """
 MultiQC for cutadapt and fastp
+and remove BAM directory
 """
 rule multiqc:
     input:
         expand(os.path.join(OD, '{sample}', '{sample}_fastp.html'), sample=SAMPLES),
-        expand(os.path.join(OD, '{sample}', '{sample}_cutadapt.txt'), sample=SAMPLES)
+        expand(os.path.join(OD, '{sample}', '{sample}_fastp.json'), sample=SAMPLES),
+        expand(os.path.join(OD, '{sample}', '{sample}_cutadapt.txt'), sample=SAMPLES),
+        expand(os.path.join(OD, '{sample}', '{sample}_kraken-report.txt'), sample=SAMPLES)
     output:
         os.path.join(OD, 'multiqc_QC', 'multiqc_report.html')
     params:
@@ -341,33 +366,13 @@ rule multiqc:
         """
         multiqc \
             --force \
-            --module cutadapt \
             --module fastp \
-            --outdir {params.outdir} \
-            {params.indir}
-        """
-
-
-# ----------------------------------------------------------
-"""
-MultiQC for kraken
-"""
-rule multiqc_kraken:
-    input:
-        expand(os.path.join(OD, '{sample}', '{sample}_kraken-report.txt'), sample=SAMPLES)
-    output:
-        os.path.join(OD, 'multiqc_kraken', 'multiqc_report.html')
-    params:
-        indir = OD,
-        outdir = os.path.join(OD, 'multiqc_kraken')
-    threads: 1
-    resources:
-        mem_mb=10000
-    shell:
-        """
-        multiqc \
-            --force \
             --module kraken \
+            --module cutadapt \
             --outdir {params.outdir} \
-            {params.indir}
+            {params.indir} \
+        && rm -rf {BAMDIR}
         """
+      
+        
+        

@@ -52,9 +52,10 @@ tar xvfz k2_pluspf_20230314.tar.gz
 
 ### Input Data (BAM files)
 
-All input data, ie `BAM` files, must be located in a local directory.
-The path and name to the local directory is input to the Snakemake workflow, via the configuration file (see below).
-Note that the workflow will process all files with extension `.bam` in the given input directory.
+All input data, ie `BAM` files, must be located in local directories, specified by an input file, the so called "file list".
+The "file list" is a tab-delimited text file and contains two columns: 
+the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the paths to the corresponding `BAM` files.
+Then, Snakemake will read this "file list" and process the `BAM` files according to the workflow protocol.
 
 
 ### Workflow Configuration File
@@ -63,8 +64,8 @@ In order to run the Snakemake workflow, one has to specify several parameters by
 
 The structure and format of the yaml file is as follows.
 ```
+file_list: 'my/input/file_list.txt'                                                  # Path to file list (tabular wiht Sample-ID and BAM-filepath)
 results: 'output'                                                                    # Path to output directory, may not exist
-bam_dir: 'st_microbiome'                                                             # Path to input directory containing BAM files (must exist)
 kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
 kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database
 ```
