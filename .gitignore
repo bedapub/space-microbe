@@ -7,3 +7,5 @@ wget-log
 logs
 data
 rulegraph.pdf
+testout-cluster/
+testout/

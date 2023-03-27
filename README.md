@@ -62,7 +62,7 @@ Then, Snakemake will read this "file list" and process the `BAM` files according
 
 In order to run the Snakemake workflow, one has to specify several parameters by a configuration file, e.g. `config.yaml`.
 
-The structure and format of the yaml file is as follows.
+The structure and format of the yaml file is as follows (white-space delimited).
 ```
 file_list: 'my/input/file_list.txt'                                                  # Path to file list (tabular wiht Sample-ID and BAM-filepath)
 results: 'output'                                                                    # Path to output directory, may not exist
