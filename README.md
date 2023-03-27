@@ -1,3 +1,156 @@
+# 'Spatial Transcriptomics meets Microbiome' Snakemake Workflow
+
+## Description
+TBD
+
+## Graph
+TBD
+
+## Citation
+TBD
+
+## Table of contents
+[Quick Start](#quick-start)
+    * [Installation](#installation)
+    * [Test installation](#test-installation)
+    * [Basic Usage](#basic-usage)
+    * [Main Output](#main-output)
+
+
+## Quick Start
+### Installation
+
+**Step 1 - Clone the repository**
+
+First, clone the repository to the desired location on your system by using the following command:
+
+```bash
+git clone https://github.com/bedapub/xyz.git
+```
+
+**Step 2 - Install conda, if not already installed**
+
+Next, ensure that conda is installed on your system, otherwise install using the instructions provided [here](https://developers.google.com/earth-engine/guides/python_install-conda/).
+
+**Step 3 - Create and activate a new conda environment**
+
+Then, create a new conda environment via the following command, replacing `/full/path/to/cloned/repo` with the appropriate path to your cloned repository:
+
+```bash
+conda env create -n st_microbiome_env --file /full/path/to/cloned/repo/environment.yaml
+```
+
+And activate the environment by executing:
+
+```bash
+conda activate st_microbiome_env
+```
+
+If you have trouble creating the environment using the above commands, you can alternatively follow the instructions [here](#environment-creation-with-mamba).
+
+**Step 4 - Download Kraken database**
+
+Building the Kraken standard database requires a lot of memory and disk space.
+See manual https://ccb.jhu.edu/software/kraken/MANUAL.html#standard-kraken-database
+
+The Snakemake workflow is using the "Standard plus protozoa & fungi" database (PlusPF, 53Gb archive size) provided by Ben Langmead et al. 
+See https://benlangmead.github.io/aws-indexes/k2
+
+```bash
+mkdir -p k2_pluspf_20230314 && cd k2_pluspf_20230314
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20230314.tar.gz
+tar xvzf k2_pluspf_20230314.tar.gz
+```
+
+**Step 5 - Prepare input data**
+
+All input data, ie `BAM` files, must be located in local directories, specified by an input file, the so called _"file list"_.
+The _"file list"_ is a tab-delimited text file and contains two columns: 
+the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the paths to the corresponding `BAM` files.
+Then, Snakemake will read this "file list" and process the `BAM` files according to the workflow protocol.
+
+
+### Test installation
+
+In order to test that the Snakemake workflow can be run on your data, navigate to your cloned repository using `cd` and download the `BAM` files required for testing via the following command:
+
+```bash
+wget <url/to/repo/with/test_dataset.tar.gz>
+tar xvzf test_dataset.tar.gz
+```
+
+Then, run the wrapper script `run.py` which will create a new `config.yaml` and launch the Snakemake workflow either locally (use `--cores <int>` option) or submitted to the cluster (use `--profile <path>` option) 
+
+```bash
+conda activate st_microbiome_env
+
+python run.py --file-list <path to FILE_LIST> \
+              --outdir <path to output folder> \
+              --kraken-db <path to KRAKEN_DB> \
+              [--kraken-threads KRAKEN_THREADS] \
+              [--cores CORES] \
+              [--jobs JOBS] \
+              [--profile <path to configuration file for cluster PROFILE>]
+```
+
+The wrapper script has the following parameters:
+
+```bash
+optional arguments:
+  -h, --help            show this help message and exit
+  --file-list FILE_LIST, -f FILE_LIST
+                        Path to file list (tabular wiht Sample-ID and BAM-filepath)
+  --outdir OUTDIR, -o OUTDIR
+                        Path to output directory, may not exist
+  --kraken-db KRAKEN_DB, -d KRAKEN_DB
+                        Path to the Kraken database
+  --kraken-threads KRAKEN_THREADS, -k KRAKEN_THREADS
+                        Number of cores to use for the Kraken classification step
+  --cores CORES, -c CORES
+                        Number of cores to use for local run
+  --jobs JOBS, -j JOBS  Number of jobs for running on the cluster
+  --profile PROFILE, -p PROFILE
+                        Path to cluster profile, if omitted Snakemake will be run locally
+```                        
+
+### Basic Usage
+
+For basic usage, first activate the conda environment and then run the wrapper script with the appropriate arguments, i.e. path to the input file list, output directory, path to kraken database, and use the optional parameters as required.
+
+```bash
+conda activate st_microbiome_env
+
+python run.py --file-list <path to FILE_LIST> \
+              --outdir <path to output folder> \
+              --kraken-db <path to KRAKEN_DB> \
+              [--kraken-threads KRAKEN_THREADS] \
+              [--cores CORES] \
+              [--jobs JOBS] \
+              [--profile <path to configuration file for cluster PROFILE>]
+```
+
+
+### Main Output
+
+TBD
+
+
+### Environment Creation with Mamba
+
+This method may be quicker than the one described above. Here we create the conda environment with `mamba` and without the provided `environment.yml` file. At the end, we use `conda-minify` to create a new `environment.yml` file.
+
+```bash
+DIR=/path/to/your/preferred/destination/folder/st_microbiome_env
+
+conda create -y -f -p $DIR -c conda-forge python=3.9 mamba
+conda activate $DIR
+mamba install -c bioconda -c conda-forge -c jamespreed -y conda-minify snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
+
+conda-minify --name $DIR -f environment.yml 
+```
+
+---------------------------------
+# INTERNAL VERSION 
 # Snakemake Version of the Pipeline 'Spatial Transcriptomics meets Microbiome'
 
 
