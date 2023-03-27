@@ -12,9 +12,11 @@ TBD
 ## Table of contents
 [Quick Start](#quick-start)  
     * [Installation](#installation)  
-    * [Test installation](#test-installation)  
+    * [Test Installation](#test-installation)  
     * [Basic Usage](#basic-usage)  
     * [Main Output](#main-output)  
+    * [Environment Creation with Mamba](#environment-creation-with-mamba)  
+
 
 
 ## Quick Start
@@ -69,8 +71,15 @@ The _"file list"_ is a tab-delimited text file and contains two columns:
 the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the paths to the corresponding `BAM` files.
 Then, Snakemake will read this "file list" and process the `BAM` files according to the workflow protocol.
 
+Example file
+```
+sampleA    /path/to/sampleA/possorted_genome_bam.bam
+sampleB    /path/to/sampleB/possorted_genome_bam.bam
+sampleC    /path/to/sampleC/possorted_genome_bam.bam
+```
 
-### Test installation
+
+### Test Installation
 
 In order to test that the Snakemake workflow can be run on your data, navigate to your cloned repository using `cd` and download the `BAM` files required for testing via the following command:
 
@@ -79,9 +88,24 @@ wget <url/to/repo/with/test_dataset.tar.gz>
 tar xvzf test_dataset.tar.gz
 ```
 
-Then, run the wrapper script `run.py` which will create a new `config.yaml` and launch the Snakemake workflow either locally (use `--cores <int>` option) or submitted to the cluster (use `--profile <path>` option) 
+Then, run the wrapper script `run.py` which will create a new `config.yaml` and launch the Snakemake workflow either locally (use `--cores <int>` option) or submitted to the cluster (use `--profile <path>` option). In the example below, Snakemake will be run locally and by using 4 cores for data processing.
 
 ```bash
+conda activate st_microbiome_env
+
+python run.py --file-list <path to FILE_LIST> \
+              --outdir <path to output folder> \
+              --kraken-db <path to KRAKEN_DB> \
+              --cores 4
+```
+
+### Basic Usage
+
+For basic usage, first activate the conda environment and then run the wrapper script with the appropriate arguments, i.e. path to the input file list, output directory, path to kraken database, and use the optional parameters as required.
+
+By the parameter `--profile <path>` the workflow will be submitted to the cluster with runnin up to `--jobs <int>` in parralle. However, if the option `--cores <int>` is used then the workflow will be executed locally.
+
+```
 conda activate st_microbiome_env
 
 python run.py --file-list <path to FILE_LIST> \
@@ -95,7 +119,9 @@ python run.py --file-list <path to FILE_LIST> \
 
 The wrapper script has the following parameters:
 
-```bash
+```
+python run.py --help
+
 optional arguments:
   -h, --help            show this help message and exit
   --file-list FILE_LIST, -f FILE_LIST
@@ -112,23 +138,6 @@ optional arguments:
   --profile PROFILE, -p PROFILE
                         Path to cluster profile, if omitted Snakemake will be run locally
 ```                        
-
-### Basic Usage
-
-For basic usage, first activate the conda environment and then run the wrapper script with the appropriate arguments, i.e. path to the input file list, output directory, path to kraken database, and use the optional parameters as required.
-
-```bash
-conda activate st_microbiome_env
-
-python run.py --file-list <path to FILE_LIST> \
-              --outdir <path to output folder> \
-              --kraken-db <path to KRAKEN_DB> \
-              [--kraken-threads KRAKEN_THREADS] \
-              [--cores CORES] \
-              [--jobs JOBS] \
-              [--profile <path to configuration file for cluster PROFILE>]
-```
-
 
 ### Main Output
 
@@ -149,8 +158,8 @@ mamba install -c bioconda -c conda-forge -c jamespreed -y conda-minify snakemake
 conda-minify --name $DIR -f environment.yml 
 ```
 
----------------------------------
-# INTERNAL VERSION 
+----------------------------------
+# INTERNAL VERSION (may be deleted)
 # Snakemake Version of the Pipeline 'Spatial Transcriptomics meets Microbiome'
 
 
