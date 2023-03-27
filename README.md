@@ -10,11 +10,11 @@ TBD
 TBD
 
 ## Table of contents
-[Quick Start](#quick-start)
-    * [Installation](#installation)
-    * [Test installation](#test-installation)
-    * [Basic Usage](#basic-usage)
-    * [Main Output](#main-output)
+[Quick Start](#quick-start)  
+    * [Installation](#installation)  
+    * [Test installation](#test-installation)  
+    * [Basic Usage](#basic-usage)  
+    * [Main Output](#main-output)  
 
 
 ## Quick Start
