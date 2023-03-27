@@ -3,11 +3,7 @@ Snakemake workflow for ST microbiome data analysis pipeline
 Spatial Transcriptomics meets Microbiome
 """
 import sys
-import pandas as pd
-import subprocess # to get git hash
-from os.path import dirname, join
-from os import listdir
-
+from os.path import join
 
 # ----------------------------------------------------------
 # Define the pipeline configuration file
@@ -18,14 +14,6 @@ configfile: 'config.yaml'
 # Define variables
 OD = config['results']
 
-
-# ----------------------------------------------------------
-# Find all BAM files and create SAMPLES array
-#INDIR = config['bam_dir']
-#SAMPLES = []
-#for file in os.listdir(INDIR):
-#    if file.endswith('.bam'):
-#        SAMPLES.append(os.path.splitext(file)[0])
 
 # ----------------------------------------------------------
 # From input FileList create SAMPLES array and temp BAM directory
@@ -89,6 +77,7 @@ rule samtools_view:
             --threads {threads} \
             {input} > {output}
         """
+        
 # ----------------------------------------------------------
 """
 sort extracted reads
@@ -114,7 +103,6 @@ rule samtools_sort:
 converting bam file to R1 and R2 fastq files (in original format)
 
 Mark directory as TEMP ?
-
 """
 rule bamtofastq:
     input:
@@ -286,9 +274,6 @@ rule fastp:
 Kraken2 profiling
 
 How much memory is required ?
-
-Define DB path 
-K2DB=/projects/site/pred/microbiome/database/kraken2_Standard_PlusPF/
 
 Step 1: Classify reads with kraken2 (with KrakenUniq option)
 """
