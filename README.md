@@ -18,13 +18,13 @@ Reads that did not align to the host transcriptome/genome are extracted (samtool
 TBD
 
 ## Table of contents
-[Quick Start](#quick-start)  
-[Installation](#installation)
-[Test Installation](#test-installation)	
-[Basic Usage](#basic-usage)	
-[pRED internal Usage](#pred-internal-usage)	
-[Main Output](#main-output)  	
-[Environment Creation with Mamba](#environment-creation-with-mamba)  
+* [Quick Start](#quick-start)  
+* [Installation](#installation)
+* [Test Installation](#test-installation)	
+* [Basic Usage](#basic-usage)	
+* [pRED internal Usage](#pred-internal-usage)	
+* [Main Output](#main-output)  	
+* [Environment Creation with Mamba](#environment-creation-with-mamba)  
 
 
 
