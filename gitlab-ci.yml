@@ -1,9 +1,0 @@
-pages:
-  stage: deploy
-  script:
-    - cp --force notebooks/*html public/pages/
-  artifacts:
-    paths:
-      - public
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
