@@ -1,10 +1,16 @@
-# 'Spatial Transcriptomics meets Microbiome' Snakemake Workflow
+# *SpaceMicrobe* Snakemake workflow
 
 ## Description
-TBD
+The *SpaceMicrobe* Snakemake workflow is part of the *SpaceMicrobe* computational framework to detect microbial reads in 10X Visium Spatial Gene Expression data.
+
+The Snakemake workflow requires that `spaceranger count` has already been run on the spatial transcriptomcics dataset. The input file required for the Snakemake workflow is the `possorted_genome_bam.bam` file from the spaceranger count `outs` folder.
+
+The Snakemake workflow outputs the taxonomic classifications of the reads (a modified Kraken2 output file), that have to be further processed with the R package [microbiome10XVisium](https://github.com/bedapub/microbiome10XVisium).
 
 ## Graph
-TBD
+Overview of the Snakemake workflow: Reads that did not align to the host transcriptome/genome are extracted (samtools_view), the molecular (UMI) and spatial (10X barcode) information of the reads are preserved in read2 (umi) and quality control on read2 is performed (cutadapt and fastp), in order to remove adapters and poly-A tails, perform quality trimming and enforce a minimum read length. Then the metagenomic profiler Kraken2 is used to perform taxonomic classification of the reads (classify).
+
+![Snakemake rule graph](rulegraph.png)
 
 ## Citation
 TBD
@@ -13,7 +19,8 @@ TBD
 [Quick Start](#quick-start)  
     * [Installation](#installation)  
     * [Test Installation](#test-installation)  
-    * [Basic Usage](#basic-usage)  
+    * [Basic Usage](#basic-usage) 
+    * [pRED internal Usage](#pred-internal-usage)
     * [Main Output](#main-output)  
     * [Environment Creation with Mamba](#environment-creation-with-mamba)  
 
@@ -27,7 +34,7 @@ TBD
 First, clone the repository to the desired location on your system by using the following command:
 
 ```bash
-git clone https://github.com/bedapub/xyz.git
+git clone https://github.com/bedapub/space-microbe.git
 ```
 
 **Step 2 - Install conda, if not already installed**
@@ -39,23 +46,20 @@ Next, ensure that conda is installed on your system, otherwise install using the
 Then, create a new conda environment via the following command, replacing `/full/path/to/cloned/repo` with the appropriate path to your cloned repository:
 
 ```bash
-conda env create -n st_microbiome_env --file /full/path/to/cloned/repo/environment.yaml
+conda env create -n space_microbe_env --file /full/path/to/cloned/repo/environment.yaml
 ```
 
 And activate the environment by executing:
 
 ```bash
-conda activate st_microbiome_env
+conda activate space_microbe_env
 ```
 
 If you have trouble creating the environment using the above commands, you can alternatively follow the instructions [here](#environment-creation-with-mamba).
 
 **Step 4 - Download Kraken database**
 
-Building the Kraken standard database requires a lot of memory and disk space.
-See manual https://ccb.jhu.edu/software/kraken/MANUAL.html#standard-kraken-database
-
-The Snakemake workflow is using the "Standard plus protozoa & fungi" database (PlusPF, 53Gb archive size) provided by Ben Langmead et al. 
+It is suggested to use the pre-built Kraken2 "Standard plus protozoa & fungi" database (PlusPF, 53Gb archive size) provided by Ben Langmead et al. 
 See https://benlangmead.github.io/aws-indexes/k2
 
 ```bash
@@ -66,12 +70,13 @@ tar xvzf k2_pluspf_20230314.tar.gz
 
 **Step 5 - Prepare input data**
 
-All input data, ie `BAM` files, must be located in local directories, specified by an input file, the so called _"file list"_.
+All input data, i.e. the possorted_genome_bam.bam `BAM` files from the spaceranger count "outs"  output folder, must be located in local directories, specified by an input file, the so called _"file list"_.
 The _"file list"_ is a tab-delimited text file and contains two columns: 
-the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the paths to the corresponding `BAM` files.
-Then, Snakemake will read this "file list" and process the `BAM` files according to the workflow protocol.
+the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the realpaths to the corresponding `BAM` files.
 
-Example file
+Snakemake will read this "file list" and process the `BAM` files according to the workflow protocol.
+
+Example file_list.txt
 ```
 sampleA    /path/to/sampleA/possorted_genome_bam.bam
 sampleB    /path/to/sampleB/possorted_genome_bam.bam
@@ -81,14 +86,9 @@ sampleC    /path/to/sampleC/possorted_genome_bam.bam
 
 ### Test Installation
 
-In order to test that the Snakemake workflow can be run on your data, navigate to your cloned repository using `cd` and download the `BAM` files required for testing via the following command:
+In order to test that the Snakemake workflow can be run on your data, you can run the Snakemake workflow on a test dataset, that contains a downsized sample named CRC_16, from the Galeano Nino et al. (Nature 2022) publication. The test dataset is available in the directory `test_dataset` in your cloned repository. 
 
-```bash
-wget <url/to/repo/with/test_dataset.tar.gz>
-tar xvzf test_dataset.tar.gz
-```
-
-Then, run the wrapper script `run.py` which will create a new `config.yaml` and launch the Snakemake workflow either locally (use `--cores <int>` option) or submitted to the cluster (use `--profile <path>` option). In the example below, Snakemake will be run locally and by using 4 cores for data processing.
+Navigate to your cloned repository using `cd`. Then, run the wrapper script `run.py` which will create a new `config.yaml` and launch the Snakemake workflow either locally (use `--cores <int>` option) or submitted to the cluster (use `--profile <path>` option). In the example below, Snakemake will be run locally and by using 4 cores for data processing. The filelist for the test_dataset has to be created with the realpath to the possorted_genome_bam.bam file.
 
 ```bash
 conda activate st_microbiome_env
@@ -103,7 +103,9 @@ python run.py --file-list <path to FILE_LIST> \
 
 For basic usage, first activate the conda environment and then run the wrapper script with the appropriate arguments, i.e. path to the input file list, output directory, path to kraken database, and use the optional parameters as required.
 
-By the parameter `--profile <path>` the workflow will be submitted to the cluster with runnin up to `--jobs <int>` in parralle. However, if the option `--cores <int>` is used then the workflow will be executed locally.
+By the parameter `--profile <path>` the workflow will be submitted to the cluster, running up to `--jobs <int>` in parallel. However, if the option `--cores <int>` is used, the the workflow will be executed locally.
+
+For the parameter `--kraken-threads` it is recommended to use 12 or 24 threads.  
 
 ```
 conda activate st_microbiome_env
@@ -125,7 +127,7 @@ python run.py --help
 optional arguments:
   -h, --help            show this help message and exit
   --file-list FILE_LIST, -f FILE_LIST
-                        Path to file list (tabular wiht Sample-ID and BAM-filepath)
+                        Path to file list (tabular with Sample-ID and BAM-filepath)
   --outdir OUTDIR, -o OUTDIR
                         Path to output directory, may not exist
   --kraken-db KRAKEN_DB, -d KRAKEN_DB
@@ -139,9 +141,28 @@ optional arguments:
                         Path to cluster profile, if omitted Snakemake will be run locally
 ```                        
 
+### pRED internal Usage
+
+For users within pRED, a conda environment has been created and the Kraken2 database is already downloaded. Users only have to edit the config.yaml file with the path to their filelist in `file_list` and the desired output directory in `results`. An example config.yaml file is provided below.
+
+Example config.yaml file:
+```
+file_list: 'test_filelist.txt'                                    		     # Path to file list (tabular with Sample-ID and BAM-filepath)
+results: 'output'                                                                    # Path to output directory, may not exist
+kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
+kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database
+```
+
+Navigate to your cloned repository using `cd`. The Snakemake worklow can then be run on the sHPC in the following way:
+```
+ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
+
+bash run_hpc.sh config.yaml
+```
+
 ### Main Output
 
-TBD
+The Snakemake workflow produces an output directory specified in `--outdir`. The output directory contains multiple subdirectories. One of the subdirectories is the `multiqc_QC` directory, containing a `multiqc_report.html` - a MultiQC report for the QC steps (fastp and cutadapt) and the taxonomic classification with Kraken2. The other subdirectories are one directory for every sample specified in the file list, named by the sample ID specified in the file list. These subdirectories contain multiple output files for every sample, the most important one being `SAMPLE_ID_profiling-output.txt`, which is the input file for the `microbiome10XVisium` R package. Other output files are the quality controlled read2 fastq file `SAMPLE_ID_trim.fq.gz` and kraken output `SAMPLE_ID_kraken-output.txt` and report `SAMPLE_ID_kraken-output.txt` files, which can be used for further processing with KrakenTools (see https://github.com/jenniferlu717/KrakenTools).
 
 
 ### Environment Creation with Mamba
@@ -149,7 +170,7 @@ TBD
 This method may be quicker than the one described above. Here we create the conda environment with `mamba` and without the provided `environment.yml` file. At the end, we use `conda-minify` to create a new `environment.yml` file.
 
 ```bash
-DIR=/path/to/your/preferred/destination/folder/st_microbiome_env
+DIR=/path/to/your/preferred/destination/folder/space_microbe_env
 
 conda create -y -f -p $DIR -c conda-forge python=3.9 mamba
 conda activate $DIR
@@ -158,129 +179,3 @@ mamba install -c bioconda -c conda-forge -c jamespreed -y conda-minify snakemake
 conda-minify --name $DIR -f environment.yml 
 ```
 
-----------------------------------
-# INTERNAL VERSION (may be deleted)
-# Snakemake Version of the Pipeline 'Spatial Transcriptomics meets Microbiome'
-
-
-## Prerequisites
-
-### Activate conda environment (only for pRED)
-
-To activate the conda environment for st_microbiome, please run the following code in the sHPC shell:
-
-```
-ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
-```
-
-### Create new conda environment
-
-It may be that you need to create a new conda environment from scratch. To do this please run one of the following code (`mamba` may be the fastest):
-
-```bash
-DIR=/path/to/your/preferred/destination/folder/st_microbiome
-NAME=st_microbiome
-
-# load module (only pRED)
-ml purge && ml Anaconda3
-
-# create conda env with mamba and without environment.yml file
-conda create -y -f -p $DIR/$NAME -c conda-forge python=3.9 mamba
-conda activate $DIR/$NAME
-mamba install -c bioconda -c conda-forge -c jamespreed -y conda-minify snakemake samtools multiqc cutadapt umi_tools 10x_bamtofastq fastp kraken2
-
-# then create the environment.yml file
-conda-minify --name $DIR/$NAME -f environment.yml 
-
-# create conda env with environment.yml file
-conda env create -p $DIR/$NAME -f environment.yml 
-conda activate $DIR/$NAME
-```
-
-### Kraken Database
-
-Building the Kraken standard database requires a lot of memory and disk space.
-See manual https://ccb.jhu.edu/software/kraken/MANUAL.html#standard-kraken-database
-
-
-The pipeline is using the "Standard plus protozoa & fungi" database (PlusPF, 53Gb archive size) provided by Ben Langmead et al. 
-See https://benlangmead.github.io/aws-indexes/k2
-
-```bash
-mkdir -p k2_pluspf_20230314 && cd k2_pluspf_20230314
-wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20230314.tar.gz
-tar xvfz k2_pluspf_20230314.tar.gz
-```
-
-### Input Data (BAM files)
-
-All input data, ie `BAM` files, must be located in local directories, specified by an input file, the so called "file list".
-The "file list" is a tab-delimited text file and contains two columns: 
-the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the paths to the corresponding `BAM` files.
-Then, Snakemake will read this "file list" and process the `BAM` files according to the workflow protocol.
-
-
-### Workflow Configuration File
-
-In order to run the Snakemake workflow, one has to specify several parameters by a configuration file, e.g. `config.yaml`.
-
-The structure and format of the yaml file is as follows (white-space delimited).
-```
-file_list: 'my/input/file_list.txt'                                                  # Path to file list (tabular wiht Sample-ID and BAM-filepath)
-results: 'output'                                                                    # Path to output directory, may not exist
-kraken_threads: 12                                                                   # Number of cores to use for the Kraken classification step
-kraken_db: '/projects/site/pred/ngs/pipelines/st_microbiome/kraken2_Standard_PlusPF' # Path to the Kraken database
-```
-
-The workflow will process all BAM files that are in the input directory `bam_dir` (must have extenstion `.bam`).
-
-## How to run (pRED only)
-
-There are two ways to run the workflow:
-1. locally in the terminal
-2. submit to a cluster
-
-To run it locally, use the following command where the first input argument is the path to the workflow configuration file, `config.yaml` (see above) and the second, optional argument is to specify the maximal number of cores to use.
-
-```bash
-./run_locally.sh <config.yaml> [cores]
-```
-
-If the workflow should be executed on a cluster, then use the following command.
-
-```bash
-./run_hpc.sh <config.yaml>
-```
-
-
-
-### Development
-
-```bash
-LSF_PROFILE=/apps/rocs/etc/apps/snakemake/lsf/v1.4_memfix
-SNAKE_FILE=Snakefile
-CONFIG_FILE=config.yaml
-JOBS=100
-
-ml purge && ml Anaconda3 && conda activate /projects/site/pred/ngs/envs/st_microbiome
-
-snakemake --snakefile $SNAKE_FILE --rulegraph all --configfile $CONFIG_FILE | dot -Tpdf > rulegraph.pdf
-
-# Submit to cluster
-snakemake --snakefile $SNAKE_FILE \
-    --configfile $CONFIG_FILE \
-    --jobs $JOBS \
-    --profile $LSF_PROFILE \
-    --notemp \
-    --latency-wait 6 \
-    --rerun-incomplete \
-    --keep-going \
-    --verbose
-    
-    
-# Run it locally
-snakemake --cores 4 
-
-conda deactivate
-
-```
