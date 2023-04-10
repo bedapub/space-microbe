@@ -8,7 +8,9 @@ The Snakemake workflow requires that `spaceranger count` has already been run on
 The Snakemake workflow outputs the taxonomic classifications of the reads (a modified Kraken2 output file), that have to be further processed with the R package [microbiome10XVisium](https://github.com/bedapub/microbiome10XVisium).
 
 ## Graph
-Overview of the Snakemake workflow: Reads that did not align to the host transcriptome/genome are extracted (samtools_view), the molecular (UMI) and spatial (10X barcode) information of the reads are preserved in read2 (umi) and quality control on read2 is performed (cutadapt and fastp), in order to remove adapters and poly-A tails, perform quality trimming and enforce a minimum read length. Then the metagenomic profiler Kraken2 is used to perform taxonomic classification of the reads (classify).
+Overview of the Snakemake workflow: 
+
+Reads that did not align to the host transcriptome/genome are extracted (samtools_view), the molecular (UMI) and spatial (10X barcode) information of the reads are preserved in read2 (umi) and quality control on read2 is performed (cutadapt and fastp), in order to remove adapters and poly-A tails, perform quality trimming and enforce a minimum read length. Then the metagenomic profiler Kraken2 is used to perform taxonomic classification of the reads (classify).
 
 ![Snakemake rule graph](rulegraph.png)
 
@@ -17,12 +19,12 @@ TBD
 
 ## Table of contents
 [Quick Start](#quick-start)  
-    * [Installation](#installation)  
-    * [Test Installation](#test-installation)  
-    * [Basic Usage](#basic-usage) 
-    * [pRED internal Usage](#pred-internal-usage)
-    * [Main Output](#main-output)  
-    * [Environment Creation with Mamba](#environment-creation-with-mamba)  
+[Installation](#installation)
+[Test Installation](#test-installation)	
+[Basic Usage](#basic-usage)	
+[pRED internal Usage](#pred-internal-usage)	
+[Main Output](#main-output)  	
+[Environment Creation with Mamba](#environment-creation-with-mamba)  
 
 
 
@@ -62,6 +64,8 @@ If you have trouble creating the environment using the above commands, you can a
 It is suggested to use the pre-built Kraken2 "Standard plus protozoa & fungi" database (PlusPF, 53Gb archive size) provided by Ben Langmead et al. 
 See https://benlangmead.github.io/aws-indexes/k2
 
+You can download the Kraken2 database to your desired location by using the following commands:
+
 ```bash
 mkdir -p k2_pluspf_20230314 && cd k2_pluspf_20230314
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_20230314.tar.gz
@@ -70,7 +74,7 @@ tar xvzf k2_pluspf_20230314.tar.gz
 
 **Step 5 - Prepare input data**
 
-All input data, i.e. the possorted_genome_bam.bam `BAM` files from the spaceranger count "outs"  output folder, must be located in local directories, specified by an input file, the so called _"file list"_.
+All input data, i.e. the possorted_genome_bam.bam `BAM` files from the spaceranger count "outs"  output folder, must be located in local directories. The input data is pecified by a  _"file list"_.
 The _"file list"_ is a tab-delimited text file and contains two columns: 
 the first column denotes a sample alias (no white space, slash, etc. allowed) and the second column contains the realpaths to the corresponding `BAM` files.
 
@@ -91,7 +95,7 @@ In order to test that the Snakemake workflow can be run on your data, you can ru
 Navigate to your cloned repository using `cd`. Then, run the wrapper script `run.py` which will create a new `config.yaml` and launch the Snakemake workflow either locally (use `--cores <int>` option) or submitted to the cluster (use `--profile <path>` option). In the example below, Snakemake will be run locally and by using 4 cores for data processing. The filelist for the test_dataset has to be created with the realpath to the possorted_genome_bam.bam file.
 
 ```bash
-conda activate st_microbiome_env
+conda activate space_microbe_env
 
 python run.py --file-list <path to FILE_LIST> \
               --outdir <path to output folder> \
@@ -108,7 +112,7 @@ By the parameter `--profile <path>` the workflow will be submitted to the cluste
 For the parameter `--kraken-threads` it is recommended to use 12 or 24 threads.  
 
 ```
-conda activate st_microbiome_env
+conda activate space_microbe_env
 
 python run.py --file-list <path to FILE_LIST> \
               --outdir <path to output folder> \
@@ -162,8 +166,14 @@ bash run_hpc.sh config.yaml
 
 ### Main Output
 
-The Snakemake workflow produces an output directory specified in `--outdir`. The output directory contains multiple subdirectories. One of the subdirectories is the `multiqc_QC` directory, containing a `multiqc_report.html` - a MultiQC report for the QC steps (fastp and cutadapt) and the taxonomic classification with Kraken2. The other subdirectories are one directory for every sample specified in the file list, named by the sample ID specified in the file list. These subdirectories contain multiple output files for every sample, the most important one being `SAMPLE_ID_profiling-output.txt`, which is the input file for the `microbiome10XVisium` R package. Other output files are the quality controlled read2 fastq file `SAMPLE_ID_trim.fq.gz` and kraken output `SAMPLE_ID_kraken-output.txt` and report `SAMPLE_ID_kraken-output.txt` files, which can be used for further processing with KrakenTools (see https://github.com/jenniferlu717/KrakenTools).
+The Snakemake workflow produces an output directory specified in `--outdir`. The output directory contains multiple subdirectories.
 
+One of the subdirectories is the `multiqc_QC` directory, containing a `multiqc_report.html` - a MultiQC report for the QC steps (fastp and cutadapt) and the taxonomic classification with Kraken2. 
+
+The other subdirectories are one directory for every sample specified in the file list, named by the sample ID specified in the file list. These subdirectories contain multiple output files for every sample:
+* `SAMPLE_ID_profiling-output.txt`: a tab-separated txt file with the spatial (BC), molecular (BC) and taxonomic (taxID) information for every read. This is the input file required for the `microbiome10XVisium` R package.
+* `SAMPLE_ID_trim.fq.gz`: the quality_controlled fastq file for read2
+* `SAMPLE_ID_kraken-output.txt` and `SAMPLE_ID_kraken-report.txt`: the original Kraken2 output and report files, which can be used for further processing with [KrakenTools] (see https://github.com/jenniferlu717/KrakenTools).
 
 ### Environment Creation with Mamba
 
